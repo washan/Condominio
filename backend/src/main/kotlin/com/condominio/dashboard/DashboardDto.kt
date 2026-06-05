@@ -31,3 +31,27 @@ data class AlertaDashboardDto(
     val descripcion: String,
     val severidad: String // HIGH, MEDIUM, LOW
 )
+
+data class ConsumoUnidadDto(
+    val name: String,
+    val actual: Double,
+    val anterior: Double
+)
+
+data class EstadoCobrosMesDto(
+    val mes: String,
+    val pagados: Int,
+    val emitidos: Int,
+    val mora: Int
+)
+
+data class ProgresoRecorridoDto(
+    val unidadId: Long,
+    val unidadNumero: String,
+    val propietario: String,
+    val lecturaAnterior: Double,
+    val lecturaActual: Double?,
+    val consumo: Double?,
+    val monto: Double?,
+    val estado: String // COMPLETADA, PENDIENTE, ERROR
+)

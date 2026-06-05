@@ -171,6 +171,144 @@ class DashboardService(
         return alertas.sortedBy { if (it.severidad == "HIGH") 0 else if (it.severidad == "MEDIUM") 1 else 2 }
     }
 
+    fun getConsumosUnidad(): List<ConsumoUnidadDto> {
+        val activePeriod = getPeriodoActivo() ?: return emptyList()
+        val allUnits = unidadRepository.findAllByActivaTrue().sortedWith(
+            compareBy( { it.numero.length }, { it.numero } )
+        )
+        
+        // Find previous period
+        val prevAnio: Short
+        val prevMes: Short
+        if (activePeriod.mes == 1.toShort()) {
+            prevAnio = (activePeriod.anio - 1).toShort()
+            prevMes = 12.toShort()
+        } else {
+            prevAnio = activePeriod.anio
+            prevMes = (activePeriod.mes - 1).toShort()
+        }
+        val prevPeriod = periodoRepository.findByAnioAndMes(prevAnio, prevMes).orElse(null)
+
+        val lecturasActuales = lecturaMedidorRepository.findAll().filter { it.periodo?.id == activePeriod.id }
+        val lecturasAnteriores = if (prevPeriod != null) {
+            lecturaMedidorRepository.findAll().filter { it.periodo?.id == prevPeriod.id }
+        } else {
+            emptyList()
+        }
+
+        return allUnits.map { unit ->
+            val medidores = medidorRepository.findByUnidadIdAndActivoTrue(unit.id)
+            val medidor = medidores.firstOrNull()
+            
+            val actualConsumo = if (medidor != null) {
+                lecturasActuales.find { it.medidor.id == medidor.id }?.consumoM3?.toDouble() ?: 0.0
+            } else {
+                0.0
+            }
+
+            val anteriorConsumo = if (medidor != null) {
+                lecturasAnteriores.find { it.medidor.id == medidor.id }?.consumoM3?.toDouble() ?: 0.0
+            } else {
+                0.0
+            }
+
+            ConsumoUnidadDto(
+                name = "C${unit.numero}",
+                actual = actualConsumo,
+                anterior = anteriorConsumo
+            )
+        }
+    }
+
+    fun getEstadoCobros(): List<EstadoCobrosMesDto> {
+        val periodos = periodoRepository.findAll()
+            .sortedByDescending { it.anio * 12 + it.mes }
+            .take(6)
+            .reversed()
+
+        val nombresMeses = arrayOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+
+        return periodos.map { per ->
+            val cobros = cobroRepository.findByPeriodoId(per.id)
+            
+            val pagados = cobros.filter { it.estado == EstadoCobro.PAGADO }.size
+            val mora = cobros.filter { it.estado == EstadoCobro.MORA }.size
+            val emitidos = cobros.filter { it.estado == EstadoCobro.EMITIDO || it.estado == EstadoCobro.BORRADOR }.size
+
+            val nombreMes = if (per.mes in 1..12) nombresMeses[per.mes - 1] else "Mes"
+
+            EstadoCobrosMesDto(
+                mes = "$nombreMes ${per.anio}",
+                pagados = pagados,
+                emitidos = emitidos,
+                mora = mora
+            )
+        }
+    }
+
+    fun getProgresoRecorrido(): List<ProgresoRecorridoDto> {
+        val activePeriod = getPeriodoActivo() ?: return emptyList()
+        val allUnits = unidadRepository.findAllByActivaTrue().sortedWith(
+            compareBy( { it.numero.length }, { it.numero } )
+        )
+        
+        // Find previous period
+        val prevAnio: Short
+        val prevMes: Short
+        if (activePeriod.mes == 1.toShort()) {
+            prevAnio = (activePeriod.anio - 1).toShort()
+            prevMes = 12.toShort()
+        } else {
+            prevAnio = activePeriod.anio
+            prevMes = (activePeriod.mes - 1).toShort()
+        }
+        val prevPeriod = periodoRepository.findByAnioAndMes(prevAnio, prevMes).orElse(null)
+
+        val lecturasActuales = lecturaMedidorRepository.findAll().filter { it.periodo?.id == activePeriod.id }
+        val lecturasAnteriores = if (prevPeriod != null) {
+            lecturaMedidorRepository.findAll().filter { it.periodo?.id == prevPeriod.id }
+        } else {
+            emptyList()
+        }
+        
+        val cobros = cobroRepository.findByPeriodoId(activePeriod.id)
+
+        return allUnits.map { unit ->
+            val medidores = medidorRepository.findByUnidadIdAndActivoTrue(unit.id)
+            val medidor = medidores.firstOrNull()
+
+            val lecturaActualEntity = medidor?.let { m -> lecturasActuales.find { it.medidor.id == m.id } }
+            val lecturaAnteriorEntity = medidor?.let { m -> lecturasAnteriores.find { it.medidor.id == m.id } }
+
+            val lecturaActual = lecturaActualEntity?.valorM3?.toDouble()
+            
+            val lecturaAnteriorVal = lecturaAnteriorEntity?.valorM3?.toDouble()
+                ?: lecturaActualEntity?.let { it.valorM3.toDouble() - (it.consumoM3?.toDouble() ?: 0.0) }
+                ?: 0.0
+
+            val consumo = lecturaActualEntity?.consumoM3?.toDouble()
+            val monto = cobros.find { it.unidad.id == unit.id }?.totalCobros?.toDouble()
+
+            val estado = when {
+                medidor == null -> "ERROR"
+                lecturaActualEntity == null -> "PENDIENTE"
+                lecturaActualEntity.consumoM3 != null && lecturaActualEntity.consumoM3!! < java.math.BigDecimal.ZERO -> "ERROR"
+                else -> "COMPLETADA"
+            }
+
+            ProgresoRecorridoDto(
+                unidadId = unit.id,
+                unidadNumero = unit.numero,
+                propietario = unit.nombrePropietario,
+                lecturaAnterior = lecturaAnteriorVal,
+                lecturaActual = lecturaActual,
+                consumo = consumo,
+                monto = monto,
+                estado = estado
+            )
+        }
+    }
+
     private fun getPeriodoActivo(): Periodo? {
         val abiertos = periodoRepository.findByEstado(EstadoPeriodo.ABIERTO)
         if (abiertos.isNotEmpty()) return abiertos.first()

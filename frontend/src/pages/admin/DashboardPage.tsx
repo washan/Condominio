@@ -4,14 +4,19 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {
-  mockResumenMes,
-  mockConsumoHistorico,
-  mockDistribucionTarifaria,
-  mockEstadoCobros6Meses,
-  mockAlertas,
-  mockLecturas,
-  mockConsumosPorUnidad,
-} from '../../data/mockDashboardData';
+  getResumenMes,
+  getConsumoHistorico,
+  getConsumosUnidad,
+  getEstadoCobros,
+  getProgresoRecorrido,
+  getAlertas,
+  ResumenMes,
+  ConsumoHistorico,
+  ConsumoUnidad,
+  EstadoCobrosMes,
+  ProgresoRecorrido,
+  Alerta
+} from '../../api/dashboardApi';
 import './DashboardPage.css';
 
 // Count-up hook
@@ -96,12 +101,88 @@ const DonutCenterLabel: React.FC<{ total: number }> = ({ total }) => (
 );
 
 const DashboardPage: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [resumenMes, setResumenMes] = useState<ResumenMes | null>(null);
+  const [consumoHistorico, setConsumoHistorico] = useState<ConsumoHistorico[]>([]);
+  const [consumosPorUnidad, setConsumosPorUnidad] = useState<ConsumoUnidad[]>([]);
+  const [estadoCobros6Meses, setEstadoCobros6Meses] = useState<EstadoCobrosMes[]>([]);
+  const [progresoRecorrido, setProgresoRecorrido] = useState<ProgresoRecorrido[]>([]);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [filterEstado, setFilterEstado] = useState<'all' | 'COMPLETADA' | 'PENDIENTE' | 'ERROR'>('all');
-  const totalUnidades = mockDistribucionTarifaria.reduce((a, b) => a + b.value, 0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [resumen, historico, consumos, cobros, recorrido, alertsList] = await Promise.all([
+          getResumenMes(),
+          getConsumoHistorico(),
+          getConsumosUnidad(),
+          getEstadoCobros(),
+          getProgresoRecorrido(),
+          getAlertas(),
+        ]);
+        setResumenMes(resumen);
+        setConsumoHistorico(historico);
+        setConsumosPorUnidad(consumos);
+        setEstadoCobros6Meses(cobros);
+        setProgresoRecorrido(recorrido);
+        setAlertas(alertsList);
+        setError(null);
+      } catch (err: any) {
+        console.error(err);
+        setError('Error al cargar la información del Dashboard.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const count0_100 = consumosPorUnidad.filter(c => c.actual <= 100).length;
+  const count101_300 = consumosPorUnidad.filter(c => c.actual > 100 && c.actual <= 300).length;
+  const count301Plus = consumosPorUnidad.filter(c => c.actual > 300).length;
+
+  const distribucionTarifaria = [
+    { name: '0–100 m³', value: count0_100, color: '#48BB78' },
+    { name: '101–300 m³', value: count101_300, color: '#F6AD55' },
+    { name: '301+ m³', value: count301Plus, color: '#FC5C7D' },
+  ];
+
+  const totalUnidades = distribucionTarifaria.reduce((a, b) => a + b.value, 0);
 
   const filteredLecturas = filterEstado === 'all'
-    ? mockLecturas
-    : mockLecturas.filter(l => l.estado === filterEstado);
+    ? progresoRecorrido
+    : progresoRecorrido.filter(l => l.estado === filterEstado);
+
+  if (loading) {
+    return (
+      <div className="dashboard" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '16px' }}>
+        <div className="spinner" style={{ width: '48px', height: '48px' }}></div>
+        <p style={{ color: '#A0AEC0', fontSize: '1rem', fontFamily: "'Outfit', sans-serif" }}>Cargando datos del Dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard">
+        <div className="glass-card" style={{ padding: '24px', background: 'rgba(252, 92, 125, 0.1)', borderColor: 'var(--color-error)', color: 'var(--color-error)', textAlign: 'center' }}>
+          ⚠️ {error}
+        </div>
+      </div>
+    );
+  }
+
+  const defaultResumen = resumenMes || {
+    totalUnidades: 0,
+    lecturasCompletadas: 0,
+    lecturasPendientes: 0,
+    cobrosEmitidos: 0,
+    totalFacturado: 0,
+    progresoRecorrido: 0,
+  };
 
   return (
     <div className="dashboard fade-in">
@@ -110,28 +191,28 @@ const DashboardPage: React.FC = () => {
         <KpiCard
           icon="💧"
           label="Recorrido del Mes"
-          value={`${mockResumenMes.progresoRecorrido}%`}
-          rawValue={mockResumenMes.progresoRecorrido}
-          subtitle={`${mockResumenMes.lecturasCompletadas} / ${mockResumenMes.totalUnidades} casas`}
+          value={`${defaultResumen.progresoRecorrido}%`}
+          rawValue={defaultResumen.progresoRecorrido}
+          subtitle={`${defaultResumen.lecturasCompletadas} / ${defaultResumen.totalUnidades} casas`}
           gradient="linear-gradient(135deg, #2575FC, #6A11CB)"
           color="#60A5FA"
           showProgress
-          progressValue={mockResumenMes.progresoRecorrido}
+          progressValue={defaultResumen.progresoRecorrido}
         />
         <KpiCard
           icon="🏠"
           label="Cobros Emitidos"
-          value={mockResumenMes.cobrosEmitidos}
-          rawValue={mockResumenMes.cobrosEmitidos}
-          subtitle={`de ${mockResumenMes.totalUnidades} unidades`}
+          value={defaultResumen.cobrosEmitidos}
+          rawValue={defaultResumen.cobrosEmitidos}
+          subtitle={`de ${defaultResumen.totalUnidades} unidades`}
           gradient="linear-gradient(135deg, #48BB78, #38A169)"
           color="#48BB78"
         />
         <KpiCard
           icon="⚠️"
           label="Lecturas Pendientes"
-          value={mockResumenMes.lecturasPendientes}
-          rawValue={mockResumenMes.lecturasPendientes}
+          value={defaultResumen.lecturasPendientes}
+          rawValue={defaultResumen.lecturasPendientes}
           subtitle="requieren atención"
           gradient="linear-gradient(135deg, #F6AD55, #ED8936)"
           color="#F6AD55"
@@ -139,8 +220,8 @@ const DashboardPage: React.FC = () => {
         <KpiCard
           icon="💰"
           label="Total Facturado"
-          value={`₡${mockResumenMes.totalFacturado.toLocaleString()}`}
-          rawValue={mockResumenMes.totalFacturado}
+          value={`₡${defaultResumen.totalFacturado.toLocaleString()}`}
+          rawValue={Math.round(Number(defaultResumen.totalFacturado))}
           subtitle="período actual"
           gradient="linear-gradient(135deg, #FC5C7D, #6A82FB)"
           color="#FC5C7D"
@@ -157,7 +238,7 @@ const DashboardPage: React.FC = () => {
             <span className="chart-legend-dot" style={{ background: 'linear-gradient(135deg, #6A11CB, #2575FC)' }}>Anterior</span>
           </div>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={mockConsumosPorUnidad} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+            <BarChart data={consumosPorUnidad} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="name" tick={{ fill: '#718096', fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#718096', fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -174,7 +255,7 @@ const DashboardPage: React.FC = () => {
             <h3 className="chart-title">📈 Historial 12 Meses (m³ Total)</h3>
           </div>
           <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={mockConsumoHistorico} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+            <AreaChart data={consumoHistorico} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
               <defs>
                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6A11CB" stopOpacity={0.6} />
@@ -208,7 +289,7 @@ const DashboardPage: React.FC = () => {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
-                  data={mockDistribucionTarifaria}
+                  data={distribucionTarifaria}
                   cx="50%"
                   cy="50%"
                   innerRadius={55}
@@ -217,7 +298,7 @@ const DashboardPage: React.FC = () => {
                   dataKey="value"
                   label={false}
                 >
-                  {mockDistribucionTarifaria.map((entry, index) => (
+                  {distribucionTarifaria.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -230,7 +311,7 @@ const DashboardPage: React.FC = () => {
             </ResponsiveContainer>
           </div>
           <div className="donut-legend">
-            {mockDistribucionTarifaria.map((item) => (
+            {distribucionTarifaria.map((item) => (
               <div key={item.name} className="donut-legend-item">
                 <span className="donut-legend-dot" style={{ background: item.color }} />
                 <span>{item.name}</span>
@@ -246,7 +327,7 @@ const DashboardPage: React.FC = () => {
             <h3 className="chart-title">💵 Estado de Cobros (6 meses)</h3>
           </div>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={mockEstadoCobros6Meses} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+            <BarChart data={estadoCobros6Meses} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="mes" tick={{ fill: '#718096', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#718096', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -269,9 +350,9 @@ const DashboardPage: React.FC = () => {
               <h3 className="section-title">📍 Progreso del Recorrido</h3>
               <div className="table-progress-bar">
                 <div className="progress-bar">
-                  <div className="progress-bar-fill" style={{ width: `${mockResumenMes.progresoRecorrido}%` }} />
+                  <div className="progress-bar-fill" style={{ width: `${defaultResumen.progresoRecorrido}%` }} />
                 </div>
-                <span className="progress-pct">{mockResumenMes.progresoRecorrido}% completado</span>
+                <span className="progress-pct">{defaultResumen.progresoRecorrido}% completado</span>
               </div>
             </div>
             <div className="table-filter-btns">
@@ -332,7 +413,7 @@ const DashboardPage: React.FC = () => {
         <div className="alertas-section glass-card">
           <h3 className="section-title">⚠️ Alertas del Mes</h3>
           <div className="alertas-list">
-            {mockAlertas.map((alerta) => (
+            {alertas.map((alerta) => (
               <div
                 key={alerta.id}
                 className={`alerta-card ${
@@ -355,6 +436,11 @@ const DashboardPage: React.FC = () => {
                 </span>
               </div>
             ))}
+            {alertas.length === 0 && (
+              <div style={{ color: '#718096', fontSize: '0.9rem', textAlign: 'center', padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+                No hay alertas activas para este período.
+              </div>
+            )}
           </div>
         </div>
       </div>

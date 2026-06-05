@@ -24,13 +24,26 @@ export interface TopConsumidor {
 
 export interface ProgresoRecorrido {
   unidadId: number;
-  numero: string;
+  unidadNumero: string;
   propietario: string;
   lecturaAnterior: number;
   lecturaActual: number | null;
   consumo: number | null;
   monto: number | null;
   estado: 'COMPLETADA' | 'PENDIENTE' | 'ERROR';
+}
+
+export interface ConsumoUnidad {
+  name: string;
+  actual: number;
+  anterior: number;
+}
+
+export interface EstadoCobrosMes {
+  mes: string;
+  pagados: number;
+  emitidos: number;
+  mora: number;
 }
 
 export interface Alerta {
@@ -64,5 +77,15 @@ export const getProgresoRecorrido = async (): Promise<ProgresoRecorrido[]> => {
 
 export const getAlertas = async (): Promise<Alerta[]> => {
   const response = await api.get<Alerta[]>('/api/dashboard/alertas');
+  return response.data;
+};
+
+export const getConsumosUnidad = async (): Promise<ConsumoUnidad[]> => {
+  const response = await api.get<ConsumoUnidad[]>('/api/dashboard/consumos-unidad');
+  return response.data;
+};
+
+export const getEstadoCobros = async (): Promise<EstadoCobrosMes[]> => {
+  const response = await api.get<EstadoCobrosMes[]>('/api/dashboard/estado-cobros');
   return response.data;
 };
