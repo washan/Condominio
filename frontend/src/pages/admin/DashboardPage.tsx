@@ -96,8 +96,6 @@ const DonutCenterLabel: React.FC<{ total: number }> = ({ total }) => (
 );
 
 const DashboardPage: React.FC = () => {
-  const now = new Date();
-  const monthYear = now.toLocaleDateString('es-CR', { month: 'long', year: 'numeric' });
   const [filterEstado, setFilterEstado] = useState<'all' | 'COMPLETADA' | 'PENDIENTE' | 'ERROR'>('all');
   const totalUnidades = mockDistribucionTarifaria.reduce((a, b) => a + b.value, 0);
 
@@ -107,25 +105,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="dashboard fade-in">
-      {/* ─── Page Header ─── */}
-      <div className="dashboard-header glass-card">
-        <div className="dashboard-header-left">
-          <h1 className="dashboard-title">Dashboard</h1>
-          <p className="dashboard-subtitle">
-            📅 {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)} — Vista general del condominio
-          </p>
-        </div>
-        <div className="dashboard-header-right">
-          <div className="dashboard-badge">
-            <span className="badge badge-success">● Sistema Activo</span>
-          </div>
-          <div className="dashboard-date">
-            {now.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'short' })}
-          </div>
-        </div>
-        <div className="dashboard-header-bg" />
-      </div>
-
       {/* ─── KPI Cards ─── */}
       <div className="kpi-grid">
         <KpiCard
@@ -322,7 +301,7 @@ const DashboardPage: React.FC = () => {
               </thead>
               <tbody>
                 {filteredLecturas.map((l) => (
-                  <tr key={l.id}>
+                  <tr key={l.unidadId}>
                     <td><strong style={{ color: 'white' }}>#{l.unidadNumero}</strong></td>
                     <td>{l.propietario}</td>
                     <td>{l.lecturaAnterior.toLocaleString()}</td>

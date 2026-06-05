@@ -8,4 +8,5 @@ import java.time.LocalDate
 @Repository
 interface TarifaRubroRepository : JpaRepository<TarifaRubro, Long> {
     fun findByRubroIdAndFechaFinIsNullOrFechaFinAfter(rubroId: Long, fecha: LocalDate): List<TarifaRubro>
+    fun existsByRubroId(rubroId: Long): Boolean
 }

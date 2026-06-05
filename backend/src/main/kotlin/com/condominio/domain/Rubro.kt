@@ -23,5 +23,8 @@ data class Rubro(
     val tipo: TipoRubro,
 
     var ordenDisplay: Short = 0,
-    var activo: Boolean = true
+    var activo: Boolean = true,
+
+    @Column(name = "porcentaje_mora", precision = 5, scale = 2, nullable = false)
+    var porcentajeMora: java.math.BigDecimal = java.math.BigDecimal.ZERO
 )

@@ -15,5 +15,5 @@ data class Condomino(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unidad_id", nullable = false)
-    val unidad: Unidad
+    var unidad: Unidad
 )

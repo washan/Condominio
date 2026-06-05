@@ -11,7 +11,7 @@ data class Unidad(
     val id: Long = 0,
 
     @Column(nullable = false)
-    val numero: String,
+    var numero: String,
 
     var nombrePropietario: String,
     var empresa: String? = null,

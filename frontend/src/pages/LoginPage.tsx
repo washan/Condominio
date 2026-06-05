@@ -20,12 +20,10 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      await login(email, password);
-      // Redirect based on stored user role
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const user = JSON.parse(stored);
+      const user = await login(email, password);
+      if (user) {
         if (user.rol === 'ADMIN') navigate('/admin/dashboard');
+        else if (user.rol === 'TECNICO') navigate('/admin/lecturas');
         else if (user.rol === 'CONDOMINO') navigate('/condomino/estado-cuenta');
         else if (user.rol === 'GUARDIA') navigate('/guardia');
       }

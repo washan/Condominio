@@ -4,6 +4,9 @@ import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+
 @Entity
 @Table(name = "tarifas_rubro")
 data class TarifaRubro(
@@ -20,6 +23,7 @@ data class TarifaRubro(
 
     val fechaFin: LocalDate? = null,
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "config_json", columnDefinition = "jsonb", nullable = false)
     val configJson: String,
 

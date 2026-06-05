@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './hooks/useAuth';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -21,6 +22,14 @@ import GuardiaPage from './pages/GuardiaPage';
 
 import './styles/index.css';
 
+const NavigateToAppropriatePage: React.FC = () => {
+  const { user } = useAuth();
+  if (user?.rol === 'TECNICO') {
+    return <Navigate to="/admin/lecturas" replace />;
+  }
+  return <Navigate to="/admin/dashboard" replace />;
+};
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -36,19 +45,47 @@ const App: React.FC = () => {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute requiredRole="ADMIN">
+              <ProtectedRoute requiredRoles={['ADMIN', 'TECNICO']}>
                 <AdminLayout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="lecturas" element={<LecturasPage />} />
-            <Route path="cobros" element={<CobrosPage />} />
-            <Route path="saldos" element={<SaldosPage />} />
-            <Route path="rubros" element={<RubrosPage />} />
-            <Route path="usuarios" element={<UsuariosPage />} />
-            <Route path="configuracion" element={<ConfiguracionPage />} />
+            <Route index element={<NavigateToAppropriatePage />} />
+            <Route path="dashboard" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="lecturas" element={
+              <ProtectedRoute requiredRoles={['ADMIN', 'TECNICO']}>
+                <LecturasPage />
+              </ProtectedRoute>
+            } />
+            <Route path="cobros" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <CobrosPage />
+              </ProtectedRoute>
+            } />
+            <Route path="saldos" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <SaldosPage />
+              </ProtectedRoute>
+            } />
+            <Route path="rubros" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <RubrosPage />
+              </ProtectedRoute>
+            } />
+            <Route path="usuarios" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <UsuariosPage />
+              </ProtectedRoute>
+            } />
+            <Route path="configuracion" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <ConfiguracionPage />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* Condómino routes */}

@@ -3,6 +3,9 @@ package com.condominio.domain
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+
 @Entity
 @Table(name = "auditoria")
 data class Auditoria(
@@ -22,9 +25,11 @@ data class Auditoria(
 
     val entidadId: String? = null,
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     val valorAnterior: String? = null,
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     val valorNuevo: String? = null,
 

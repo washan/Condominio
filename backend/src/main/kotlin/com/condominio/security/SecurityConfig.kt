@@ -36,6 +36,7 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
+                    .requestMatchers("/uploads/**").permitAll()
                     .requestMatchers("/api/admin/**", "/api/dashboard/**").hasRole("ADMIN")
                     .requestMatchers("/api/tecnico/**").hasRole("TECNICO")
                     .requestMatchers("/api/condomino/**").hasRole("CONDOMINO")
@@ -61,7 +62,7 @@ class SecurityConfig(
         configuration.maxAge = 3600L
 
         val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/api/**", configuration)
+        source.registerCorsConfiguration("/**", configuration)
         return source
     }
 

@@ -11,17 +11,17 @@ data class Usuario(
     val id: Long = 0,
 
     @Column(nullable = false)
-    val nombre: String,
+    var nombre: String,
 
     @Column(unique = true, nullable = false)
-    val email: String,
+    var email: String,
 
     @Column(name = "password_bcrypt", nullable = false)
     var passwordHash: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val rol: Rol,
+    var rol: Rol,
 
     var activo: Boolean = true,
     var intentosFallidos: Int = 0,
