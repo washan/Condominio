@@ -22,6 +22,7 @@ const mockVisitors: Visitor[] = [
 
 const GuardiaPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [accessResult, setAccessResult] = useState<'allowed' | 'denied' | null>(null);
   const { logout } = useAuth();
@@ -29,12 +30,22 @@ const GuardiaPage: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!search.trim()) return;
     const found = mockVisitors.find(v =>
       v.nombre.toLowerCase().includes(search.toLowerCase()) ||
       v.pin === search
     );
     setSelectedVisitor(found || null);
+    setHasSearched(true);
     setAccessResult(null);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setHasSearched(false);
+    if (!val) {
+      setSelectedVisitor(null);
+    }
   };
 
   const handleAccess = (allow: boolean) => {
@@ -43,8 +54,16 @@ const GuardiaPage: React.FC = () => {
       setAccessResult(null);
       setSelectedVisitor(null);
       setSearch('');
+      setHasSearched(false);
     }, 3000);
   };
+
+  const filteredVisitors = mockVisitors.filter(v =>
+    v.nombre.toLowerCase().includes(search.toLowerCase()) ||
+    v.pin.includes(search) ||
+    v.unidad.includes(search) ||
+    v.autorizadoPor.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div style={{
@@ -103,7 +122,7 @@ const GuardiaPage: React.FC = () => {
             <input
               type="text"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => handleSearchChange(e.target.value)}
               placeholder="Buscar por nombre o PIN de acceso..."
               style={{
                 flex: 1, padding: '20px 24px', fontSize: '1.2rem',
@@ -172,7 +191,7 @@ const GuardiaPage: React.FC = () => {
           </div>
         )}
 
-        {selectedVisitor === null && search.length > 0 && (
+        {hasSearched && selectedVisitor === null && (
           <div style={{ color: '#FC5C7D', fontSize: '1rem', textAlign: 'center', padding: '20px' }}>
             ⚠️ Visitante no encontrado en la lista de autorizados
           </div>
@@ -184,7 +203,7 @@ const GuardiaPage: React.FC = () => {
             📋 Visitantes Autorizados Hoy
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {mockVisitors.map(v => (
+            {filteredVisitors.map(v => (
               <div key={v.id} style={{
                 background: 'rgba(255,255,255,0.05)',
                 backdropFilter: 'blur(8px)',
@@ -193,7 +212,7 @@ const GuardiaPage: React.FC = () => {
                 display: 'flex', alignItems: 'center', gap: 16,
                 cursor: 'pointer', transition: 'background 0.2s',
               }}
-                onClick={() => { setSelectedVisitor(v); setSearch(v.nombre); setAccessResult(null); }}
+                onClick={() => { setSelectedVisitor(v); setSearch(v.nombre); setHasSearched(true); setAccessResult(null); }}
               >
                 <span style={{ fontSize: '1.5rem' }}>{v.foto}</span>
                 <div style={{ flex: 1 }}>
@@ -210,6 +229,11 @@ const GuardiaPage: React.FC = () => {
                 </div>
               </div>
             ))}
+            {filteredVisitors.length === 0 && (
+              <div style={{ color: '#718096', fontSize: '0.9rem', textAlign: 'center', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.08)' }}>
+                🔍 No se encontraron visitantes autorizados para "{search}".
+              </div>
+            )}
           </div>
         </div>
       </main>
