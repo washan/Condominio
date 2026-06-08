@@ -27,8 +27,16 @@ const LoginPage: React.FC = () => {
         else if (user.rol === 'CONDOMINO') navigate('/condomino/estado-cuenta');
         else if (user.rol === 'GUARDIA') navigate('/guardia');
       }
-    } catch {
-      setError('Credenciales incorrectas. Verifique su email y contraseña.');
+    } catch (err: any) {
+      if (err.code === 'ERR_NETWORK' || !err.response) {
+        setError('Error de comunicación. No se pudo conectar con el servidor. Verifique si el backend está activo.');
+      } else if (err.response.status === 401) {
+        setError('Credenciales incorrectas. Verifique su email y contraseña.');
+      } else if (err.response.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Error al intentar iniciar sesión. Por favor, intente de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
