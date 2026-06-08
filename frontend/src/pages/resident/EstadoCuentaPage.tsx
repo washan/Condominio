@@ -21,6 +21,15 @@ const obtenerNombreMes = (mes: number) => {
 
 const EstadoCuentaPage: React.FC = () => {
   const { user } = useAuth();
+  const getFotoUrl = (url: string | null | undefined): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${apiBase}${cleanUrl}`;
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [perfil, setPerfil] = useState<CondominoPerfil | null>(null);
@@ -318,7 +327,7 @@ const EstadoCuentaPage: React.FC = () => {
             overflow: 'hidden'
           }}>
             {lecturaActual?.fotoAnteriorUrl ? (
-              <img src={`http://localhost:8080${lecturaActual.fotoAnteriorUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Foto anterior" />
+              <img src={getFotoUrl(lecturaActual.fotoAnteriorUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Foto anterior" />
             ) : (
               <>
                 <span style={{ fontSize: '2rem' }}>📷</span>
@@ -339,7 +348,7 @@ const EstadoCuentaPage: React.FC = () => {
             overflow: 'hidden'
           }}>
             {lecturaActual?.fotoActualUrl ? (
-              <img src={`http://localhost:8080${lecturaActual.fotoActualUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Foto actual" />
+              <img src={getFotoUrl(lecturaActual.fotoActualUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Foto actual" />
             ) : (
               <>
                 <span style={{ fontSize: '2rem' }}>📷</span>

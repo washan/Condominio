@@ -3,6 +3,7 @@ package com.condominio.email
 import jakarta.mail.internet.MimeMessage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -13,7 +14,9 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class EmailService(
-    @Autowired(required = false) private val mailSender: JavaMailSender?
+    @Autowired(required = false) private val mailSender: JavaMailSender?,
+    @Value("\${app.frontend-url}") private val frontendUrl: String,
+    @Value("\${app.backend-url}") private val backendUrl: String
 ) {
     private val logger = LoggerFactory.getLogger(EmailService::class.java)
 
@@ -69,8 +72,8 @@ class EmailService(
             logger.info("=== [SIMULACIÓN DE CORREO] ===")
             logger.info("Destinatario: $emailDestino ($nombreDestinatario)")
             logger.info("Asunto: Estado de Cuenta - Casa #$casaNumero - Período $periodoStr")
-            logger.info("Visualizar Email HTML: http://localhost:8080/uploads/emails/${htmlFile.name}")
-            logger.info("Descargar PDF Adjunto: http://localhost:8080/uploads/emails/${pdfFile.name}")
+            logger.info("Visualizar Email HTML: $backendUrl/uploads/emails/${htmlFile.name}")
+            logger.info("Descargar PDF Adjunto: $backendUrl/uploads/emails/${pdfFile.name}")
             logger.info("==============================")
         } catch (e: Exception) {
             logger.error("Error al guardar respaldo local del correo: ${e.message}", e)
@@ -122,7 +125,7 @@ class EmailService(
                     <p>Adjunto a este correo encontrará el detalle completo de los rubros cobrados (agua, cuota condominal y mantenimiento) en formato PDF.</p>
                     
                     <div style="text-align: center; margin-top: 32px;">
-                        <a href="http://localhost:5173" class="button" style="color: #ffffff;">Ir al Portal del Condómino</a>
+                        <a href="$frontendUrl" class="button" style="color: #ffffff;">Ir al Portal del Condómino</a>
                     </div>
                 </div>
                 <div class="footer">
