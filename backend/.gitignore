@@ -29,3 +29,9 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Uploads
+uploads/
+
+# OCR language data
+*.traineddata

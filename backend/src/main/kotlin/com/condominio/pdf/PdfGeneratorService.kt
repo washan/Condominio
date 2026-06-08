@@ -52,30 +52,34 @@ class PdfGeneratorService(
         // Generar PDF en memoria
         val pdfBytes = generarPdfBytes(cobro)
 
-        // Subir a Supabase
-        val path = "pdfs/${cobro.periodo.id}/${cobro.id}_estado_cuenta.pdf"
-        supabaseStorageService.uploadFileBytes(path, pdfBytes, "application/pdf")
+        return try {
+            // Subir a Supabase
+            val path = "pdfs/${cobro.periodo.id}/${cobro.id}_estado_cuenta.pdf"
+            supabaseStorageService.uploadFileBytes(path, pdfBytes, "application/pdf")
 
-        // Guardar registro en base de datos
-        val publicUrl = supabaseStorageService.getSignedUrl(path)
-        
-        val pdfOpt = estadoCuentaPdfRepository.findByCobroId(cobroId)
-        val pdfEntity = if (pdfOpt.isPresent) {
-            val exist = pdfOpt.get()
-            val field = exist.javaClass.getDeclaredField("urlPdf")
-            field.isAccessible = true
-            field.set(exist, publicUrl)
-            exist
-        } else {
-            EstadoCuentaPdf(
-                cobro = cobro,
-                urlPdf = publicUrl,
-                fechaGenerado = LocalDateTime.now()
-            )
+            // Guardar registro en base de datos
+            val publicUrl = supabaseStorageService.getSignedUrl(path)
+            
+            val pdfOpt = estadoCuentaPdfRepository.findByCobroId(cobroId)
+            val pdfEntity = if (pdfOpt.isPresent) {
+                val exist = pdfOpt.get()
+                val field = exist.javaClass.getDeclaredField("urlPdf")
+                field.isAccessible = true
+                field.set(exist, publicUrl)
+                exist
+            } else {
+                EstadoCuentaPdf(
+                    cobro = cobro,
+                    urlPdf = publicUrl,
+                    fechaGenerado = LocalDateTime.now()
+                )
+            }
+            estadoCuentaPdfRepository.save(pdfEntity)
+            publicUrl
+        } catch (e: Exception) {
+            logger.error("Error al subir el PDF de cobro $cobroId a Supabase Storage: ${e.message}", e)
+            ""
         }
-        estadoCuentaPdfRepository.save(pdfEntity)
-
-        return publicUrl
     }
 
     fun generarPdfBytes(cobro: Cobro): ByteArray {
@@ -196,7 +200,7 @@ class PdfGeneratorService(
                     document.add(Paragraph("EVIDENCIA DE LECTURA").setBold().setFontSize(10f).setFontColor(ColorConstants.GRAY))
                     
                     val photoTable = Table(UnitValue.createPercentArray(floatArrayOf(100f))).useAllAvailableWidth()
-                    val fotoBytes = downloadImageBytes(lectura.fotoUrl!!)
+                    val fotoBytes = downloadImageBytes(lectura.fotoUrl)
                     if (fotoBytes != null) {
                         val image = Image(ImageDataFactory.create(fotoBytes)).setMaxWidth(200f).setMaxHeight(150f)
                         photoTable.addCell(Cell().add(image).setBorder(com.itextpdf.layout.borders.Border.NO_BORDER).setTextAlignment(TextAlignment.CENTER))

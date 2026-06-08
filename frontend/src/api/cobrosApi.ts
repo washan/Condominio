@@ -59,3 +59,8 @@ export const descargarPdfMasivo = async (periodoId: number): Promise<Blob> => {
   const response = await api.post(`/api/periodos/${periodoId}/pdf-masivo`, null, { responseType: 'blob' });
   return response.data;
 };
+
+export const enviarEmailCobro = async (cobroId: number): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(`/api/cobros/${cobroId}/enviar-email`);
+  return response.data;
+};

@@ -17,6 +17,7 @@ import {
   ProgresoRecorrido,
   Alerta
 } from '../../api/dashboardApi';
+import { getAvisosVigentes, Aviso } from '../../api/avisosApi';
 import './DashboardPage.css';
 
 // Count-up hook
@@ -109,19 +110,21 @@ const DashboardPage: React.FC = () => {
   const [estadoCobros6Meses, setEstadoCobros6Meses] = useState<EstadoCobrosMes[]>([]);
   const [progresoRecorrido, setProgresoRecorrido] = useState<ProgresoRecorrido[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [filterEstado, setFilterEstado] = useState<'all' | 'COMPLETADA' | 'PENDIENTE' | 'ERROR'>('all');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [resumen, historico, consumos, cobros, recorrido, alertsList] = await Promise.all([
+        const [resumen, historico, consumos, cobros, recorrido, alertsList, avisosList] = await Promise.all([
           getResumenMes(),
           getConsumoHistorico(),
           getConsumosUnidad(),
           getEstadoCobros(),
           getProgresoRecorrido(),
           getAlertas(),
+          getAvisosVigentes()
         ]);
         setResumenMes(resumen);
         setConsumoHistorico(historico);
@@ -129,6 +132,7 @@ const DashboardPage: React.FC = () => {
         setEstadoCobros6Meses(cobros);
         setProgresoRecorrido(recorrido);
         setAlertas(alertsList);
+        setAvisos(avisosList);
         setError(null);
       } catch (err: any) {
         console.error(err);
@@ -409,38 +413,69 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Alertas */}
-        <div className="alertas-section glass-card">
-          <h3 className="section-title">⚠️ Alertas del Mes</h3>
-          <div className="alertas-list">
-            {alertas.map((alerta) => (
-              <div
-                key={alerta.id}
-                className={`alerta-card ${
-                  alerta.severidad === 'HIGH' ? 'alerta-high'
-                  : alerta.severidad === 'MEDIUM' ? 'alerta-medium'
-                  : 'alerta-low'
-                }`}
-              >
-                <div className="alerta-icon">
-                  {alerta.tipo === 'CONSUMO_ALTO' ? '💧' : alerta.tipo === 'LECTURA_PENDIENTE' ? '📋' : '💸'}
+        {/* Columna Derecha (Alertas y Avisos) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Alertas */}
+          <div className="alertas-section glass-card">
+            <h3 className="section-title">⚠️ Alertas del Mes</h3>
+            <div className="alertas-list">
+              {alertas.map((alerta) => (
+                <div
+                  key={alerta.id}
+                  className={`alerta-card ${
+                    alerta.severidad === 'HIGH' ? 'alerta-high'
+                    : alerta.severidad === 'MEDIUM' ? 'alerta-medium'
+                    : 'alerta-low'
+                  }`}
+                >
+                  <div className="alerta-icon">
+                    {alerta.tipo === 'CONSUMO_ALTO' ? '💧' : alerta.tipo === 'LECTURA_PENDIENTE' ? '📋' : '💸'}
+                  </div>
+                  <div className="alerta-body">
+                    <div className="alerta-title">Casa #{alerta.unidadNumero} — {alerta.propietario}</div>
+                    <div className="alerta-desc">{alerta.descripcion}</div>
+                  </div>
+                  <span className={`alerta-badge ${
+                    alerta.severidad === 'HIGH' ? 'badge-error' : alerta.severidad === 'MEDIUM' ? 'badge-warning' : 'badge-info'
+                  } badge`}>
+                    {alerta.severidad}
+                  </span>
                 </div>
-                <div className="alerta-body">
-                  <div className="alerta-title">Casa #{alerta.unidadNumero} — {alerta.propietario}</div>
-                  <div className="alerta-desc">{alerta.descripcion}</div>
+              ))}
+              {alertas.length === 0 && (
+                <div style={{ color: '#718096', fontSize: '0.9rem', textAlign: 'center', padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+                  No hay alertas activas para este período.
                 </div>
-                <span className={`alerta-badge ${
-                  alerta.severidad === 'HIGH' ? 'badge-error' : alerta.severidad === 'MEDIUM' ? 'badge-warning' : 'badge-info'
-                } badge`}>
-                  {alerta.severidad}
-                </span>
-              </div>
-            ))}
-            {alertas.length === 0 && (
-              <div style={{ color: '#718096', fontSize: '0.9rem', textAlign: 'center', padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
-                No hay alertas activas para este período.
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+
+          {/* Avisos Recientes */}
+          <div className="alertas-section glass-card">
+            <h3 className="section-title">📢 Avisos Recientes</h3>
+            <div className="alertas-list">
+              {avisos.slice(0, 3).map((aviso) => (
+                <div key={aviso.id} className="alerta-card alerta-low" style={{ display: 'block', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <strong style={{ color: 'white', fontSize: '0.85rem' }}>{aviso.titulo}</strong>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                      {aviso.fechaPublicacion ? new Date(aviso.fechaPublicacion).toLocaleDateString() : ''}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                    {aviso.contenido}
+                  </p>
+                  <div style={{ marginTop: '8px', fontSize: '0.7rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>
+                    Por: {aviso.creadoPorNombre || 'Administración'}
+                  </div>
+                </div>
+              ))}
+              {avisos.length === 0 && (
+                <div style={{ color: '#718096', fontSize: '0.9rem', textAlign: 'center', padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+                  No hay avisos recientes.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

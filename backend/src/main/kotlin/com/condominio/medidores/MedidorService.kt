@@ -25,6 +25,14 @@ class MedidorService(
         val unidad = unidadRepository.findById(dto.unidadId)
             .orElseThrow { BusinessException("Unidad no encontrada con id: ${dto.unidadId}") }
 
+        if (dto.activo) {
+            val activosAnteriores = medidorRepository.findByUnidadIdAndActivoTrue(unidad.id)
+            activosAnteriores.forEach {
+                it.activo = false
+                medidorRepository.save(it)
+            }
+        }
+
         val entity = Medidor(
             unidad = unidad,
             codigoInterno = dto.codigoInterno,
@@ -41,6 +49,16 @@ class MedidorService(
     fun updateMedidor(id: Long, dto: MedidorDto): MedidorDto {
         val entity = medidorRepository.findById(id)
             .orElseThrow { BusinessException("Medidor no encontrado con id: $id") }
+
+        if (dto.activo && !entity.activo) {
+            val activosAnteriores = medidorRepository.findByUnidadIdAndActivoTrue(entity.unidad.id)
+            activosAnteriores.forEach {
+                if (it.id != entity.id) {
+                    it.activo = false
+                    medidorRepository.save(it)
+                }
+            }
+        }
 
         entity.activo = dto.activo
         // No permitimos cambiar la unidad una vez creado, solo el código y estado

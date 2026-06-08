@@ -29,3 +29,8 @@ backend/.gradle/
 # Docker volumes
 postgres_data/
 pgadmin_data/
+
+# Generated assets
+temp.pdf
+backend/uploads/
+*.traineddata

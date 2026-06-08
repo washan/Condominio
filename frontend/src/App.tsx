@@ -17,7 +17,12 @@ import SaldosPage from './pages/admin/SaldosPage';
 import RubrosPage from './pages/admin/RubrosPage';
 import UsuariosPage from './pages/admin/UsuariosPage';
 import ConfiguracionPage from './pages/admin/ConfiguracionPage';
+import UnidadesPage from './pages/admin/UnidadesPage';
+import AvisosAdminPage from './pages/admin/AvisosAdminPage';
+import ReservasAdminPage from './pages/admin/ReservasAdminPage';
 import EstadoCuentaPage from './pages/resident/EstadoCuentaPage';
+import InvitadosPage from './pages/resident/InvitadosPage';
+import ReservasPage from './pages/resident/ReservasPage';
 import GuardiaPage from './pages/GuardiaPage';
 
 import './styles/index.css';
@@ -81,6 +86,21 @@ const App: React.FC = () => {
                 <UsuariosPage />
               </ProtectedRoute>
             } />
+            <Route path="unidades" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <UnidadesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="avisos" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <AvisosAdminPage />
+              </ProtectedRoute>
+            } />
+            <Route path="reservas" element={
+              <ProtectedRoute requiredRoles="ADMIN">
+                <ReservasAdminPage />
+              </ProtectedRoute>
+            } />
             <Route path="configuracion" element={
               <ProtectedRoute requiredRoles="ADMIN">
                 <ConfiguracionPage />
@@ -99,6 +119,8 @@ const App: React.FC = () => {
           >
             <Route index element={<Navigate to="/condomino/estado-cuenta" replace />} />
             <Route path="estado-cuenta" element={<EstadoCuentaPage />} />
+            <Route path="invitados" element={<InvitadosPage />} />
+            <Route path="reservas" element={<ReservasPage />} />
           </Route>
 
           {/* Guardia */}

@@ -14,7 +14,8 @@ import java.math.BigDecimal
 @RestController
 class LecturaController(
     private val lecturaService: LecturaService,
-    private val usuarioRepository: UsuarioRepository
+    private val usuarioRepository: UsuarioRepository,
+    private val ocrService: OcrService
 ) {
 
     // --- PERIODOS ENDPOINTS ---
@@ -90,9 +91,21 @@ class LecturaController(
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     fun uploadFoto(
         @RequestParam("file") file: MultipartFile
-    ): ResponseEntity<Map<String, String>> {
+    ): ResponseEntity<Map<String, Any?>> {
+        val fileBytes = file.bytes
         val url = lecturaService.guardarFotoLocal(file)
-        return ResponseEntity.ok(mapOf("url" to url))
+        
+        val ocrResult = try {
+            ocrService.detectarLectura(fileBytes)
+        } catch (e: Throwable) {
+            org.slf4j.LoggerFactory.getLogger(LecturaController::class.java).error("Error al procesar OCR en controlador", e)
+            null
+        }
+
+        return ResponseEntity.ok(mapOf(
+            "url" to url,
+            "lecturaOcr" to ocrResult
+        ))
     }
 
     @PostMapping("/api/lecturas/importar")

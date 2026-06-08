@@ -32,6 +32,10 @@ supabase:
   key: ${SUPABASE_KEY}
   bucket: ${SUPABASE_BUCKET}
 
+ocr:
+  provider: ${OCR_PROVIDER:local}
+  google-api-key: ${GOOGLE_API_KEY:}
+
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS}
 

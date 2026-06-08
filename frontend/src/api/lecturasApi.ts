@@ -79,14 +79,19 @@ export const cerrarPeriodo = async (id: number): Promise<PeriodoDto> => {
   return response.data;
 };
 
-export const subirFotoLectura = async (file: File): Promise<string> => {
+export interface SubirFotoResponse {
+  url: string;
+  lecturaOcr: number | null;
+}
+
+export const subirFotoLectura = async (file: File): Promise<SubirFotoResponse> => {
   const formData = new FormData();
   formData.append('file', file);
-  const response = await api.post<{ url: string }>(
+  const response = await api.post<SubirFotoResponse>(
     '/api/lecturas/upload',
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
-  return response.data.url;
+  return response.data;
 };
 

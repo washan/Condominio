@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import kotlin.random.Random
 
 @Component
@@ -25,7 +26,10 @@ class DatabaseSeeder(
     private val lecturaMedidorRepository: LecturaMedidorRepository,
     private val cobroRepository: CobroRepository,
     private val itemCobroRepository: ItemCobroRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val avisoRepository: AvisoRepository,
+    private val espacioComunRepository: EspacioComunRepository,
+    private val reservaRepository: ReservaRepository
 ) : CommandLineRunner {
 
     private val logger = LoggerFactory.getLogger(DatabaseSeeder::class.java)
@@ -74,15 +78,7 @@ class DatabaseSeeder(
             Configuracion(clave = "condominio.telefono", valor = "+506 8888-8888", descripcion = "Teléfono de la administración", modificadoPor = admin),
             Configuracion(clave = "condominio.email_contacto", valor = "admin@veredasbosque.cr", descripcion = "Correo de contacto oficial", modificadoPor = admin),
             Configuracion(clave = "condominio.direccion", valor = "Guadalupe, Cartago, Costa Rica", descripcion = "Dirección física", modificadoPor = admin),
-            Configuracion(clave = "moneda.simbolo", valor = "₡", descripcion = "Símbolo monetario", modificadoPor = admin),
-            Configuracion(clave = "tarifa.bloque1_hasta", valor = "100.0", descripcion = "Límite del primer bloque (m³)", modificadoPor = admin),
-            Configuracion(clave = "tarifa.bloque1_precio", valor = "1250.0", descripcion = "Precio por m³ en Bloque 1", modificadoPor = admin),
-            Configuracion(clave = "tarifa.bloque2_hasta", valor = "300.0", descripcion = "Límite del segundo bloque (m³)", modificadoPor = admin),
-            Configuracion(clave = "tarifa.bloque2_precio", valor = "2100.0", descripcion = "Precio por m³ en Bloque 2", modificadoPor = admin),
-            Configuracion(clave = "tarifa.bloque3_precio", valor = "3500.0", descripcion = "Precio por m³ en Bloque 3 (Excedente)", modificadoPor = admin),
-            Configuracion(clave = "tarifa.cuota_administracion", valor = "15000.0", descripcion = "Cuota básica de administración", modificadoPor = admin),
-            Configuracion(clave = "mora.dias", valor = "15", descripcion = "Días de gracia para pago", modificadoPor = admin),
-            Configuracion(clave = "mora.porcentaje", valor = "10.0", descripcion = "Recargo por morosidad (%)", modificadoPor = admin)
+            Configuracion(clave = "moneda.simbolo", valor = "₡", descripcion = "Símbolo monetario", modificadoPor = admin)
         )
         configuracionRepository.saveAll(configs)
 
@@ -342,6 +338,75 @@ class DatabaseSeeder(
             ))
         }
         itemCobroRepository.saveAll(itemsCobro)
+
+        // 8. Crear Espacios Comunes
+        val rancho = EspacioComun(
+            nombre = "Rancho BBQ",
+            descripcion = "Rancho para eventos con asador de carne, mesas, sillas y fregadero",
+            capacidadMaxima = 20,
+            costoReserva = BigDecimal("10000.00"),
+            activa = true
+        )
+        val salon = EspacioComun(
+            nombre = "Salón de Eventos",
+            descripcion = "Salón multiuso cerrado con aire acondicionado y baños integrados",
+            capacidadMaxima = 50,
+            costoReserva = BigDecimal("25000.00"),
+            activa = true
+        )
+        val cancha = EspacioComun(
+            nombre = "Cancha de Tenis",
+            descripcion = "Cancha de tenis de superficie rápida con iluminación nocturna",
+            capacidadMaxima = 4,
+            costoReserva = BigDecimal.ZERO,
+            activa = true
+        )
+        espacioComunRepository.saveAll(listOf(rancho, salon, cancha))
+
+        // 9. Crear Comunicados / Avisos
+        val aviso1 = Aviso(
+            titulo = "Mantenimiento Preventivo de Tanques de Agua",
+            contenido = "Estimados condominos, el próximo miércoles se realizará la limpieza y desinfección anual de los tanques de almacenamiento de agua potable. El servicio estará suspendido de 8:00 AM a 12:00 PM. Agradecemos tomar las medidas correspondientes.",
+            fechaPublicacion = LocalDateTime.now().minusDays(3),
+            vigenteHasta = LocalDate.now().plusDays(5),
+            creadoPor = admin
+        )
+        val aviso2 = Aviso(
+            titulo = "Nueva Disposición para Control de Acceso de Visitantes",
+            contenido = "A partir de este mes, toda visita vehicular deberá registrarse de manera previa en la aplicación para agilizar la entrada con el oficial de seguridad. Agradecemos su colaboración con la seguridad del condominio.",
+            fechaPublicacion = LocalDateTime.now().minusDays(1),
+            vigenteHasta = LocalDate.now().plusDays(30),
+            creadoPor = admin
+        )
+        val aviso3 = Aviso(
+            titulo = "Recordatorio: Horario de Uso de Áreas Comunes",
+            contenido = "Les recordamos que el horario de uso de las áreas comunes (Rancho BBQ y Cancha de Tenis) es de 6:00 AM a 10:00 PM. Las reservaciones deben gestionarse por medio de la plataforma con al menos 24 horas de anticipación.",
+            fechaPublicacion = LocalDateTime.now().minusDays(5),
+            vigenteHasta = null,
+            creadoPor = admin
+        )
+        avisoRepository.saveAll(listOf(aviso1, aviso2, aviso3))
+
+        // 10. Crear Reservaciones de prueba
+        val unidad1 = unidades[0]
+        val unidad2 = unidades[1]
+        val reserva1 = Reserva(
+            espacio = rancho,
+            unidad = unidad1,
+            fechaReserva = LocalDate.now().plusDays(1),
+            horaInicio = LocalTime.of(12, 0),
+            horaFin = LocalTime.of(16, 0),
+            estado = EstadoReserva.APROBADA
+        )
+        val reserva2 = Reserva(
+            espacio = cancha,
+            unidad = unidad2,
+            fechaReserva = LocalDate.now().plusDays(2),
+            horaInicio = LocalTime.of(8, 0),
+            horaFin = LocalTime.of(10, 0),
+            estado = EstadoReserva.PENDIENTE
+        )
+        reservaRepository.saveAll(listOf(reserva1, reserva2))
 
         logger.info("Siembra de datos de desarrollo completada exitosamente!")
     }

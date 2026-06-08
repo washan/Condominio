@@ -6,20 +6,26 @@ import './AdminLayout.css';
 
 const navItems = [
   { path: '/admin/dashboard', icon: '📊', label: 'Dashboard', roles: ['ADMIN'] },
+  { path: '/admin/unidades', icon: '🏡', label: 'Casas y Medidores', roles: ['ADMIN'] },
   { path: '/admin/lecturas', icon: '💧', label: 'Lecturas', roles: ['ADMIN', 'TECNICO'] },
   { path: '/admin/cobros', icon: '💰', label: 'Cobros', roles: ['ADMIN'] },
   { path: '/admin/saldos', icon: '📋', label: 'Saldos Iniciales', roles: ['ADMIN'] },
   { path: '/admin/rubros', icon: '⚙️', label: 'Rubros y Tarifas', roles: ['ADMIN'] },
+  { path: '/admin/reservas', icon: '📅', label: 'Reservaciones', roles: ['ADMIN'] },
+  { path: '/admin/avisos', icon: '📢', label: 'Comunicados y Avisos', roles: ['ADMIN'] },
   { path: '/admin/usuarios', icon: '👥', label: 'Usuarios', roles: ['ADMIN'] },
   { path: '/admin/configuracion', icon: '🔧', label: 'Configuración', roles: ['ADMIN'] },
 ];
 
 const breadcrumbMap: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
+  '/admin/unidades': 'Casas y Medidores',
   '/admin/lecturas': 'Lecturas de Agua',
   '/admin/cobros': 'Gestión de Cobros',
   '/admin/saldos': 'Saldos Iniciales',
   '/admin/rubros': 'Rubros y Tarifas',
+  '/admin/reservas': 'Reservaciones',
+  '/admin/avisos': 'Comunicados y Avisos',
   '/admin/usuarios': 'Usuarios',
   '/admin/configuracion': 'Configuración',
 };

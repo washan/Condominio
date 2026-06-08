@@ -1,5 +1,6 @@
 package com.condominio.security
 
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -42,6 +43,13 @@ class SecurityConfig(
                     .requestMatchers("/api/condomino/**").hasRole("CONDOMINO")
                     .requestMatchers("/api/guardia/**").hasRole("GUARDIA")
                     .anyRequest().authenticated()
+            }
+            .exceptionHandling { exceptions ->
+                exceptions.authenticationEntryPoint { _, response, _ ->
+                    response.status = HttpServletResponse.SC_UNAUTHORIZED
+                    response.contentType = "application/json"
+                    response.writer.write("{\"error\": \"No autorizado: token inválido o expirado\", \"status\": 401}")
+                }
             }
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)

@@ -25,15 +25,7 @@ class ConfiguracionController(
             telefonoContacto = valores["condominio.telefono"] ?: "",
             emailContacto = valores["condominio.email_contacto"] ?: "",
             direccion = valores["condominio.direccion"] ?: "",
-            logoUrl = valores["condominio.logo_url"],
-            tarifaBloque1Hasta = valores["tarifa.bloque1_hasta"]?.toDoubleOrNull() ?: 100.0,
-            tarifaBloque1Precio = valores["tarifa.bloque1_precio"]?.toDoubleOrNull() ?: 1250.0,
-            tarifaBloque2Hasta = valores["tarifa.bloque2_hasta"]?.toDoubleOrNull() ?: 300.0,
-            tarifaBloque2Precio = valores["tarifa.bloque2_precio"]?.toDoubleOrNull() ?: 2100.0,
-            tarifaBloque3Precio = valores["tarifa.bloque3_precio"]?.toDoubleOrNull() ?: 3500.0,
-            cuotaAdministracion = valores["tarifa.cuota_administracion"]?.toDoubleOrNull() ?: 15000.0,
-            diasMora = valores["mora.dias"]?.toIntOrNull() ?: 15,
-            porcentajeMora = valores["mora.porcentaje"]?.toDoubleOrNull() ?: 10.0
+            logoUrl = valores["condominio.logo_url"]
         )
         return ResponseEntity.ok(dto)
     }
@@ -50,15 +42,7 @@ class ConfiguracionController(
             "condominio.nombre" to dto.nombreCondominio,
             "condominio.telefono" to dto.telefonoContacto,
             "condominio.email_contacto" to dto.emailContacto,
-            "condominio.direccion" to dto.direccion,
-            "tarifa.bloque1_hasta" to dto.tarifaBloque1Hasta.toString(),
-            "tarifa.bloque1_precio" to dto.tarifaBloque1Precio.toString(),
-            "tarifa.bloque2_hasta" to dto.tarifaBloque2Hasta.toString(),
-            "tarifa.bloque2_precio" to dto.tarifaBloque2Precio.toString(),
-            "tarifa.bloque3_precio" to dto.tarifaBloque3Precio.toString(),
-            "tarifa.cuota_administracion" to dto.cuotaAdministracion.toString(),
-            "mora.dias" to dto.diasMora.toString(),
-            "mora.porcentaje" to dto.porcentajeMora.toString()
+            "condominio.direccion" to dto.direccion
         )
         
         configuracionService.updateValores(mapa, usuario)

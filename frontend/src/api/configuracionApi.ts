@@ -6,14 +6,6 @@ export interface Configuracion {
   emailContacto: string;
   direccion: string;
   logoUrl?: string;
-  tarifaBloque1Hasta: number;
-  tarifaBloque1Precio: number;
-  tarifaBloque2Hasta: number;
-  tarifaBloque2Precio: number;
-  tarifaBloque3Precio: number;
-  cuotaAdministracion: number;
-  diasMora: number;
-  porcentajeMora: number;
 }
 
 export const getConfiguracion = async (): Promise<Configuracion> => {

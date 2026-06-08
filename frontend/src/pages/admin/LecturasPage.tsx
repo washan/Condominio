@@ -49,6 +49,10 @@ const LecturasPage: React.FC = () => {
   const [editFotoUrl, setEditFotoUrl] = useState<string>('');
   const [uploadingEdit, setUploadingEdit] = useState(false);
 
+  // OCR Status States
+  const [ocrNewStatus, setOcrNewStatus] = useState<string | null>(null);
+  const [ocrEditStatus, setOcrEditStatus] = useState<string | null>(null);
+
   // View Details Modal State
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewLectura, setViewLectura] = useState<Lectura | null>(null);
@@ -188,6 +192,7 @@ const LecturasPage: React.FC = () => {
     setNewUnidadId('');
     setNewValorM3('');
     setNewFotoUrl('');
+    setOcrNewStatus(null);
     setShowNewModal(true);
   };
 
@@ -197,6 +202,7 @@ const LecturasPage: React.FC = () => {
     setEditPropietario(l.propietario);
     setEditValorM3(l.lecturaActual !== null ? l.lecturaActual.toString() : '');
     setEditFotoUrl(l.fotoUrl || '');
+    setOcrEditStatus(null);
     setShowEditModal(true);
   };
 
@@ -216,8 +222,15 @@ const LecturasPage: React.FC = () => {
     try {
       setUploadingNew(true);
       setError(null);
-      const url = await subirFotoLectura(file);
-      setNewFotoUrl(url);
+      setOcrNewStatus(null);
+      const res = await subirFotoLectura(file);
+      setNewFotoUrl(res.url);
+      if (res.lecturaOcr != null) {
+        setNewValorM3(res.lecturaOcr.toString());
+        setOcrNewStatus(`Lectura detectada automáticamente por OCR: ${res.lecturaOcr} m³`);
+      } else {
+        setOcrNewStatus('No se pudo detectar un valor numérico claro en la imagen. Por favor, ingrésela manualmente.');
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.error || 'Error al subir la imagen de evidencia.');
@@ -233,8 +246,15 @@ const LecturasPage: React.FC = () => {
     try {
       setUploadingEdit(true);
       setError(null);
-      const url = await subirFotoLectura(file);
-      setEditFotoUrl(url);
+      setOcrEditStatus(null);
+      const res = await subirFotoLectura(file);
+      setEditFotoUrl(res.url);
+      if (res.lecturaOcr != null) {
+        setEditValorM3(res.lecturaOcr.toString());
+        setOcrEditStatus(`Lectura detectada automáticamente por OCR: ${res.lecturaOcr} m³`);
+      } else {
+        setOcrEditStatus('No se pudo detectar un valor numérico claro en la imagen. Por favor, ingrésela manualmente.');
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.error || 'Error al subir la imagen de evidencia.');
@@ -575,6 +595,19 @@ const LecturasPage: React.FC = () => {
                   required
                   disabled={loadingAction}
                 />
+                {ocrNewStatus && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    marginTop: '6px',
+                    color: ocrNewStatus.includes('detectada') ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                    background: ocrNewStatus.includes('detectada') ? 'rgba(72, 187, 120, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: `1px solid ${ocrNewStatus.includes('detectada') ? 'rgba(72, 187, 120, 0.3)' : 'var(--color-border)'}`
+                  }}>
+                    {ocrNewStatus}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -716,6 +749,19 @@ const LecturasPage: React.FC = () => {
                   required
                   disabled={loadingAction}
                 />
+                {ocrEditStatus && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    marginTop: '6px',
+                    color: ocrEditStatus.includes('detectada') ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                    background: ocrEditStatus.includes('detectada') ? 'rgba(72, 187, 120, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: `1px solid ${ocrEditStatus.includes('detectada') ? 'rgba(72, 187, 120, 0.3)' : 'var(--color-border)'}`
+                  }}>
+                    {ocrEditStatus}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

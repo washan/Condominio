@@ -9,6 +9,7 @@ COPY src src
 RUN ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:17-jre-alpine
+RUN apk add --no-cache tesseract-ocr tesseract-ocr-data-spa
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080

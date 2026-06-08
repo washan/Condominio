@@ -5,10 +5,7 @@ import com.condominio.cobros.MotorCobroService
 import com.condominio.domain.EstadoPeriodo
 import com.condominio.domain.Usuario
 import com.condominio.exception.BusinessException
-import com.condominio.repository.CobroRepository
-import com.condominio.repository.CondominoRepository
-import com.condominio.repository.PeriodoRepository
-import com.condominio.repository.UsuarioRepository
+import com.condominio.repository.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
@@ -23,6 +20,8 @@ class CondominoController(
     private val usuarioRepository: UsuarioRepository,
     private val periodoRepository: PeriodoRepository,
     private val cobroRepository: CobroRepository,
+    private val medidorRepository: MedidorRepository,
+    private val lecturaMedidorRepository: LecturaMedidorRepository,
     private val motorCobroService: MotorCobroService
 ) {
 
@@ -76,6 +75,62 @@ class CondominoController(
             .map { motorCobroService.getCobro(it.id) }
 
         return ResponseEntity.ok(cobros)
+    }
+
+    @GetMapping("/lectura-actual")
+    fun getLecturaActual(@AuthenticationPrincipal userDetails: UserDetails): ResponseEntity<Map<String, Any?>> {
+        val usuario = getUsuarioFromDetails(userDetails)
+        val condomino = condominoRepository.findByUsuarioId(usuario.id)
+            .orElseThrow { BusinessException("No está asociado a ninguna unidad habitacional") }
+
+        val abiertos = periodoRepository.findByEstado(EstadoPeriodo.ABIERTO)
+        if (abiertos.isEmpty()) {
+            throw BusinessException("No hay ningún período de facturación abierto actualmente")
+        }
+        val periodo = abiertos.first()
+
+        val medidores = medidorRepository.findByUnidadIdAndActivoTrue(condomino.unidad.id)
+        if (medidores.isEmpty()) {
+            return ResponseEntity.ok(mapOf(
+                "lecturaAnterior" to 0.0,
+                "lecturaActual" to null,
+                "consumoM3" to null,
+                "fotoAnteriorUrl" to null,
+                "fotoActualUrl" to null
+            ))
+        }
+        val medidor = medidores.first()
+
+        // Lectura actual
+        val lecturaActualOpt = lecturaMedidorRepository.findByMedidorIdAndPeriodoId(medidor.id, periodo.id)
+        val lecturaActual = lecturaActualOpt.orElse(null)
+
+        // Lectura anterior
+        val prevAnio: Short
+        val prevMes: Short
+        if (periodo.mes == 1.toShort()) {
+            prevAnio = (periodo.anio - 1).toShort()
+            prevMes = 12.toShort()
+        } else {
+            prevAnio = periodo.anio
+            prevMes = (periodo.mes - 1).toShort()
+        }
+        val prevPeriodOpt = periodoRepository.findByAnioAndMes(prevAnio, prevMes)
+        val lecturaAnteriorVal = if (prevPeriodOpt.isPresent) {
+            lecturaMedidorRepository.findByMedidorIdAndPeriodoId(medidor.id, prevPeriodOpt.get().id)
+                .map { it.valorM3.toDouble() }
+                .orElse(0.0)
+        } else {
+            lecturaActual?.let { it.valorM3.toDouble() - (it.consumoM3?.toDouble() ?: 0.0) } ?: 0.0
+        }
+
+        return ResponseEntity.ok(mapOf(
+            "lecturaAnterior" to lecturaAnteriorVal,
+            "lecturaActual" to lecturaActual?.valorM3?.toDouble(),
+            "consumoM3" to lecturaActual?.consumoM3?.toDouble(),
+            "fotoAnteriorUrl" to null,
+            "fotoActualUrl" to lecturaActual?.fotoUrl
+        ))
     }
 
     private fun getUsuarioFromDetails(userDetails: UserDetails): Usuario {

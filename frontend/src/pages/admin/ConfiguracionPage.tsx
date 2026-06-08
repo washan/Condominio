@@ -31,11 +31,10 @@ const ConfiguracionPage: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!config) return;
     const { name, value } = e.target;
-    const isNumeric = ['tarifaBloque1Hasta', 'tarifaBloque1Precio', 'tarifaBloque2Hasta', 'tarifaBloque2Precio', 'tarifaBloque3Precio', 'cuotaAdministracion', 'diasMora', 'porcentajeMora'].includes(name);
 
     setConfig({
       ...config,
-      [name]: isNumeric ? parseFloat(value) || 0 : value
+      [name]: value
     });
   };
 
@@ -179,143 +178,6 @@ const ConfiguracionPage: React.FC = () => {
                 rows={3}
                 style={{ resize: 'vertical' }}
               />
-            </div>
-          </div>
-
-          {/* Section: Water Tariff Configuration */}
-          <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h2 className="section-title" style={{ margin: 0, borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
-              💧 Tarifas de Agua y Cuota
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Límite Bloque 1 (m³)</label>
-                <input
-                  type="number"
-                  name="tarifaBloque1Hasta"
-                  value={config?.tarifaBloque1Hasta || 0}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Precio Bloque 1 (₡/m³)</label>
-                <input
-                  type="number"
-                  name="tarifaBloque1Precio"
-                  value={config?.tarifaBloque1Precio || 0}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', paddingTop: '20px' }}>
-                <span style={{ fontSize: '0.8rem', color: '#718096' }}>Consumos desde 0 hasta límite.</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Límite Bloque 2 (m³)</label>
-                <input
-                  type="number"
-                  name="tarifaBloque2Hasta"
-                  value={config?.tarifaBloque2Hasta || 0}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Precio Bloque 2 (₡/m³)</label>
-                <input
-                  type="number"
-                  name="tarifaBloque2Precio"
-                  value={config?.tarifaBloque2Precio || 0}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', paddingTop: '20px' }}>
-                <span style={{ fontSize: '0.8rem', color: '#718096' }}>Consumos entre Bloque 1 y Bloque 2.</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Excedente Bloque 3</label>
-                <input
-                  type="text"
-                  value="Excedente (+)"
-                  disabled
-                  className="form-input"
-                  style={{ opacity: 0.6, background: 'rgba(255,255,255,0.02)' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Precio Bloque 3 (₡/m³)</label>
-                <input
-                  type="number"
-                  name="tarifaBloque3Precio"
-                  value={config?.tarifaBloque3Precio || 0}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', paddingTop: '20px' }}>
-                <span style={{ fontSize: '0.8rem', color: '#718096' }}>Consumos que superen el límite 2.</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '8px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Cuota de Administración Base (₡)</label>
-                <input
-                  type="number"
-                  name="cuotaAdministracion"
-                  value={config?.cuotaAdministracion || 0}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.8rem', color: '#A0AEC0', display: 'block', marginBottom: '6px' }}>Recargo de Mora (%)</label>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <input
-                    type="number"
-                    name="porcentajeMora"
-                    value={config?.porcentajeMora || 0}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    step="0.01"
-                    style={{ flex: 1 }}
-                    required
-                  />
-                  <input
-                    type="number"
-                    name="diasMora"
-                    value={config?.diasMora || 0}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    style={{ width: '100px' }}
-                    placeholder="Días"
-                    required
-                  />
-                </div>
-                <span style={{ fontSize: '0.75rem', color: '#718096', display: 'block', marginTop: '4px' }}>
-                  Recargo porcentual aplicado pasados los días configurados.
-                </span>
-              </div>
             </div>
           </div>
 
