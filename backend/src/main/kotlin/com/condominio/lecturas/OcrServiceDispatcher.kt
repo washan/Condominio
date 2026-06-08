@@ -9,9 +9,8 @@ import java.math.BigDecimal
 @Service
 @Primary
 class OcrServiceDispatcher(
-    private val localOcrService: LocalOcrService,
     private val googleVisionOcrService: GoogleVisionOcrService,
-    @Value("\${ocr.provider:local}") private val provider: String
+    @Value("\${ocr.provider:google}") private val provider: String
 ) : OcrService {
     private val logger = LoggerFactory.getLogger(OcrServiceDispatcher::class.java)
 
@@ -19,10 +18,9 @@ class OcrServiceDispatcher(
         logger.info("Despachando servicio OCR utilizando proveedor configurado: $provider")
         return when (provider.lowercase()) {
             "google" -> googleVisionOcrService.detectarLectura(fotoBytes)
-            "local" -> localOcrService.detectarLectura(fotoBytes)
             else -> {
-                logger.warn("Proveedor OCR '$provider' no soportado. Usando proveedor 'local' por defecto.")
-                localOcrService.detectarLectura(fotoBytes)
+                logger.warn("Proveedor OCR '$provider' no soportado o deshabilitado localmente.")
+                null
             }
         }
     }

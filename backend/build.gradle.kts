@@ -44,9 +44,6 @@ dependencies {
     // Mail Sending
     implementation("org.springframework.boot:spring-boot-starter-mail")
 
-    // OCR Processing
-    implementation("net.sourceforge.tess4j:tess4j:5.9.0")
-
     // Rate Limiting
     implementation("com.bucket4j:bucket4j-core:8.7.0")
 

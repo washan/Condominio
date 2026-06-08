@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 COPY gradlew .
 COPY gradle gradle
@@ -8,8 +8,7 @@ RUN sed -i 's/\r$//' gradlew && chmod +x ./gradlew && ./gradlew dependencies --n
 COPY src src
 RUN ./gradlew bootJar --no-daemon
 
-FROM eclipse-temurin:17-jre
-RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-spa && rm -rf /var/lib/apt/lists/*
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
