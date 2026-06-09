@@ -33,7 +33,7 @@ supabase:
   bucket: ${SUPABASE_BUCKET}
 
 ocr:
-  provider: ${OCR_PROVIDER:local}
+  provider: ${OCR_PROVIDER:google}
   google-api-key: ${GOOGLE_API_KEY:}
 
 cors:
